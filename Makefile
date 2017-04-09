@@ -76,13 +76,19 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS := klinecalc
+BIN_PROGRAMS := klinecalc kfileclip
 
 klinecalc_SRCS := klinecalc/main.cpp \
                   klinecalc/numcalc.cpp \
                   klinecalc/parser.cpp
 
 klinecalc_CXXFLAGS := -std=c++14
+
+kfileclip_SRCS := kfileclip/main.cpp \
+                  kfileclip/filebuffer.cpp \
+                  kfileclip/clipboard.cpp
+
+kfileclip_CXXFLAGS := -std=c++14
 
 # Variables for libraries
 #
