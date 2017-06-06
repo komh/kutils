@@ -78,13 +78,13 @@ NO_COMPRESS_RES :=
 
 BIN_PROGRAMS := klinecalc kfileclip krn
 
-klinecalc_SRCS := klinecalc/main.cpp \
+klinecalc_SRCS := klinecalc/klinecalc.cpp \
                   klinecalc/numcalc.cpp \
                   klinecalc/parser.cpp
 
 klinecalc_CXXFLAGS := -std=c++14
 
-kfileclip_SRCS := kfileclip/main.cpp \
+kfileclip_SRCS := kfileclip/kfileclip.cpp \
                   kfileclip/filebuffer.cpp \
                   kfileclip/clipboard.cpp
 

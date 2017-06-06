@@ -12,7 +12,7 @@
  * http://www.wtfpl.net/ for more details.
  */
 
-/** \file main.cpp */
+/** \file klinecalc.cpp */
 
 #include "numcalc.h"
 

@@ -12,7 +12,7 @@
  * http://www.wtfpl.net/ for more details.
  */
 
-/** \file main.cpp */
+/** \file kfileclip.cpp */
 
 #include "filebuffer.h"
 #include "clipboard.h"
