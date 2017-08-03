@@ -14,7 +14,7 @@
 ##### Configuration parts that you can modify
 
 # specify sub directories
-SUBDIRS := kfileclip klinecalc krn klxtools
+SUBDIRS :=
 
 # specify gcc compiler flags for all the programs
 CFLAGS := -Wall
@@ -76,7 +76,12 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS :=
+BIN_PROGRAMS := klxhdr
+
+klxhdr_SRCS := klxhdr.cpp \
+               lxheader.cpp
+
+klxhdr_CXXFLAGS := -std=c++14
 
 # Variables for libraries
 #
@@ -121,6 +126,6 @@ BIN_PROGRAMS :=
 
 BIN_LIBRARIES :=
 
-include Makefile.common
+include ../Makefile.common
 
 # additional stuffs
