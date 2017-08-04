@@ -30,6 +30,7 @@ public:
     ~LxHeader();
 
     bool setFilename( const std::string& filename );
+    bool write() const;
 
     std::string dosMagic() const;
 
@@ -95,8 +96,13 @@ public:
     unsigned long nresTableSize() const;
     unsigned long nresSum() const;
     unsigned long autoData() const;
+
     unsigned long debugInfo() const;
+    void setDebugInfo( unsigned long offset );
+
     unsigned long debugLen() const;
+    void setDebugLen( unsigned long len );
+
     unsigned long instPreload() const;
     unsigned long instDemand() const;
     unsigned long heapSize() const;

@@ -35,6 +35,19 @@ static inline const e32_exe& e32( const std::vector< char >& v )
 }
 
 /**
+ * Cast std::vector< char >& to e32_exe&
+ *
+ * \param[in] v Variable to cast
+ * \return Casted e32_exe& variable
+ */
+static inline e32_exe& e32( std::vector< char >& v )
+{
+    const auto& cv = v;
+
+    return const_cast< e32_exe& >( e32( cv ));
+}
+
+/**
  * LxHeader constructor
  *
  * \param[in] filename Filename to read LX header
@@ -116,6 +129,32 @@ bool LxHeader::setFilename( const std::string& filename )
 
     // All done. Return true regardless of the result of ifs.good()
     return true;
+}
+
+/**
+ * Write LX header to file
+ *
+ * \return true on success, false on error
+ */
+bool LxHeader::write() const
+{
+    std::ofstream ofs;
+
+    ofs.open( _filename, ofs.in | ofs.out | ofs.binary );
+    if( !ofs.is_open())
+        return false;
+
+    ofs.seekp( _lxOffset );
+    if( !ofs.good())
+        return false;
+
+    ofs.write( _lxData.data(), _lxData.size());
+    if( !ofs.good())
+        return false;
+
+    ofs.close();
+
+    return ofs.good();
 }
 
 /**
@@ -549,6 +588,16 @@ unsigned long LxHeader::debugInfo() const
 }
 
 /**
+ * Set offset of the debugging information
+ *
+ * \param[in] offset Offset of the debugging information
+ */
+void LxHeader::setDebugInfo( unsigned long offset )
+{
+    e32( _lxData ).e32_debuginfo = offset;
+}
+
+/**
  * Get the length of the debugging information
  *
  * \return Length of the debugging information in bytes
@@ -556,6 +605,16 @@ unsigned long LxHeader::debugInfo() const
 unsigned long LxHeader::debugLen() const
 {
     return e32( _lxData ).e32_debuglen;
+}
+
+/**
+ * Set the length of the debugging information
+ *
+ * \param[in] len Length of the debugging information in bytes
+ */
+void LxHeader::setDebugLen( unsigned long len )
+{
+    e32( _lxData ).e32_debuglen = len;
 }
 
 /**
