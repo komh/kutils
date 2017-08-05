@@ -76,7 +76,7 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS := klxhdr kstrip
+BIN_PROGRAMS := klxhdr kstrip kldd
 
 klxhdr_SRCS := klxhdr.cpp \
                lxheader.cpp
@@ -87,6 +87,11 @@ kstrip_SRCS := kstrip.cpp \
                lxheader.cpp
 
 kstrip_CXXFLAGS := -std=c++14
+
+kldd_SRCS := kldd.cpp \
+             lxheader.cpp
+
+kldd_CXXFLAGS := -std=gnu++14 -DOS2EMX_PLAIN_CHAR -funsigned-char
 
 # Variables for libraries
 #
