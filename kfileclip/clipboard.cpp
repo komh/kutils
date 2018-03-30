@@ -29,6 +29,15 @@
  */
 Clipboard::Clipboard() : _opened( false )
 {
+    PPIB ppib;
+
+    DosGetInfoBlocks( NULL, &ppib );
+
+    // Workaround for VirtualBox. Without morphing to PM, clipboard is not
+    // shared between host and guest.
+    if( ppib->pib_ultype == 3 )
+        ppib->pib_ultype = 4;
+
     // open clipboard
     _opened = WinOpenClipbrd( 0 );
 }
