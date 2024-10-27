@@ -16,9 +16,12 @@
 
 #include "filebuffer.h"
 #include "clipboard.h"
+#include "initpmapp.h"
 
 int main(int argc, char *argv[])
 {
+    InitPMApp app;
+
     FileBuffer buffer( argc < 2 ? std::string() : argv[ 1 ]);
     buffer.read();
 
