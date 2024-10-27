@@ -34,14 +34,14 @@ public:
      *
      * \return anchor block handle
      */
-    HAB hab() { return _hab; }
+    HAB hab() const { return _hab; }
 
     /**
      * Get a handle of a message queue
      *
      * \return message queue handle
      */
-    HMQ hmq() { return _hmq; }
+    HMQ hmq() const { return _hmq; }
 
 private:
     HAB _hab;       ///< anchor block handle
