@@ -81,7 +81,7 @@ BIN_PROGRAMS := kfileclip
 kfileclip_SRCS := kfileclip.cpp \
                   filebuffer.cpp \
                   clipboard.cpp \
-                  initpmapp.cpp
+                  pmapp.cpp
 
 kfileclip_CXXFLAGS := -std=c++14
 

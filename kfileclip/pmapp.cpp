@@ -1,5 +1,5 @@
 /*
- * InitPMApp
+ * PMApp
  *
  * Copyright (C) 2024 KO Myung-Hun <komh78@gmail.com>
  *
@@ -12,18 +12,18 @@
  * http://www.wtfpl.net/ for more details.
  */
 
-/** \file initpmapp.cpp */
+/** \file pmapp.cpp */
 
 #define INCL_DOS
 #define INCL_WIN
 #include <os2.h>
 
-#include "initpmapp.h"
+#include "pmapp.h"
 
 /**
  * Constructor
  */
-InitPMApp::InitPMApp() : _hab( 0 ), _hmq( 0 )
+PMApp::PMApp() : _hab( 0 ), _hmq( 0 )
 {
     PPIB ppib;
 
@@ -40,7 +40,7 @@ InitPMApp::InitPMApp() : _hab( 0 ), _hmq( 0 )
 /**
  * Destructor
  */
-InitPMApp::~InitPMApp()
+PMApp::~PMApp()
 {
     if( !_hmq )
         WinDestroyMsgQueue( _hmq );

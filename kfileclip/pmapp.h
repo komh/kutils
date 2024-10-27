@@ -1,5 +1,5 @@
 /*
- * InitPMApp
+ * PMApp
  *
  * Copyright (C) 2024 KO Myung-Hun <komh78@gmail.com>
  *
@@ -12,22 +12,22 @@
  * http://www.wtfpl.net/ for more details.
  */
 
-/** \file initpmapp.h */
+/** \file pmapp.h */
 
-#ifndef KFILECLIP_INITPMAPP_H
-#define KFILECLIP_INITPMAPP_H
+#ifndef KFILECLIP_PMAPP_H
+#define KFILECLIP_PMAPP_H
 
 #define INCL_WIN
 #include <os2.h>
 
 /**
- * InitPMApp class
+ * PMApp class
  */
-class InitPMApp
+class PMApp
 {
 public:
-    InitPMApp();
-    ~InitPMApp();
+    PMApp();
+    ~PMApp();
 
     /**
      * Get a handle of an anchor block
