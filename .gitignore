@@ -7,3 +7,5 @@
 *.o
 *.obj
 *.res
+kerror/kerror_errno.cpp
+kerror/kerror_os2error.cpp

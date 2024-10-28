@@ -14,13 +14,13 @@
 ##### Configuration parts that you can modify
 
 # specify sub directories
-SUBDIRS := kfileclip klinecalc krn klxtools kerror
+SUBDIRS :=
 
 # specify gcc compiler flags for all the programs
 CFLAGS := -Wall
 
 # specify g++ compiler flags for all the programs
-CXXFLAGS := -Wall
+CXXFLAGS := -Wall -std=c++17
 
 # specify linker flags such as -L option for all the programs
 LDFLAGS :=
@@ -76,7 +76,13 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS :=
+BIN_PROGRAMS := kerrno kos2err
+
+kerrno_SRCS     := kerror_errno.cpp
+kerrno_CXXFLAGS :=
+
+kos2err_SRCS     := kerror_os2error.cpp
+kos2err_CXXFLAGS := -DUSE_OS2ERROR
 
 # Variables for libraries
 #
@@ -121,6 +127,14 @@ BIN_PROGRAMS :=
 
 BIN_LIBRARIES :=
 
-include Makefile.common
+include ../Makefile.common
 
 # additional stuffs
+
+CLEAN-FILES += kerror_errno.cpp kerror_os2error.cpp
+
+kerror_errno.cpp: kerror.cpp
+	cp $^ $@
+
+kerror_os2error.cpp: kerror.cpp
+	cp $^ $@
