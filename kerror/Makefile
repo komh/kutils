@@ -76,13 +76,10 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS := kerrno kos2err
+BIN_PROGRAMS := kerrno
 
-kerrno_SRCS     := kerror_errno.cpp
+kerrno_SRCS     := kerror.cpp libcerrormessage.cpp os2errormessage.cpp
 kerrno_CXXFLAGS :=
-
-kos2err_SRCS     := kerror_os2error.cpp
-kos2err_CXXFLAGS := -DUSE_OS2ERROR
 
 # Variables for libraries
 #
@@ -131,10 +128,9 @@ include ../Makefile.common
 
 # additional stuffs
 
-CLEAN-FILES += kerror_errno.cpp kerror_os2error.cpp
+CLEAN-FILES += kos2err.exe
 
-kerror_errno.cpp: kerror.cpp
-	cp $^ $@
+all: kos2err.exe
 
-kerror_os2error.cpp: kerror.cpp
-	cp $^ $@
+kos2err.exe: kerrno.exe
+	ln4exe $^ $@

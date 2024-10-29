@@ -1,5 +1,5 @@
 /*
- * OS/2 error list
+ * Os2ErrorMessage
  *
  * Copyright (C) 2024 KO Myung-Hun <komh78@gmail.com>
  *
@@ -16,6 +16,9 @@
 
 #define INCL_DOSERRORS
 #include <os2.h>
+
+#include "errormessage.h"
+#include "os2errormessage.h"
 
 #ifndef ERROR_ITERATED_DATA_EXCEEDS_64k
 // EMX defines ERROR_AUTODATASEG_EXCEEDS_64K not ERROR_AUTODATASEG_EXCEEDS_64k
@@ -52,7 +55,7 @@
 #define MSG_HPFS_DISK_ERROR_WARN     693
 #endif
 
-static std::vector< error_item > error_list = {
+static error_list os2_errors = {
     ERROR_ITEM( NO_ERROR, "No error occurred." ),
     ERROR_ITEM( ERROR_INVALID_FUNCTION, "Function number is not valid." ),
     ERROR_ITEM( ERROR_FILE_NOT_FOUND, "File not found." ),
@@ -663,3 +666,8 @@ static std::vector< error_item > error_list = {
     ERROR_ITEM( ERROR_CPSIO_NO_FONT_SWIT, "" ),
     ERROR_ITEM( ERROR_ENTRY_IS_CALLGATE, "" ),
 };
+
+const error_list& Os2ErrorMessage::errors() const
+{
+    return os2_errors;
+}

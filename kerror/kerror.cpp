@@ -15,99 +15,55 @@
 /** \file */
 
 #include <iostream>
-
-#include <vector>
+#include <string>
 #include <algorithm>
 
-#include <cstdlib>
-#include <cctype>
-
-#define ERROR_ITEM( e, s ) { e, #e, s }
-
-struct error_item
-{
-    int err;
-    const std::string name;
-    const std::string str;
-};
-
-#ifdef USE_OS2ERROR
-#include "os2error.inc"
-#else
-#include "errno.inc"
-#endif
-
-static void print_item( const error_item& item )
-{
-    std::cout << item.name << "(" << item.err << "): " << item.str << "\n";
-}
-
-static int print_error( int err )
-{
-    bool found = false;
-
-    for( auto item : error_list )
-    {
-        if( err == item.err )
-        {
-            print_item( item );
-
-            found = true;
-        }
-    }
-
-    return found;
-}
-
-static bool print_error( const std::string& name )
-{
-    bool found = false;
-
-    for( auto item : error_list )
-    {
-        if( name.length() == item.name.length()
-            && std::equal(name.begin(), name.end(), item.name.begin(),
-                          [](auto a, auto b) {
-                            return ::toupper( a ) == ::toupper( b );
-                          }))
-        {
-            print_item( item );
-
-            found = true;
-        }
-    }
-
-    return found;
-}
+#include "errormessage.h"
+#include "libcerrormessage.h"
+#include "os2errormessage.h"
 
 int main( int argc, char *argv[])
 {
-    std::string errname;
-    bool found;
-
     if( argc < 2 )
     {
         std::cerr << "Specify an error number or an error name.\n";
         return 1;
     }
 
-    errname = argv[ 1 ];
+    std::string me( argv[ 0 ]);
+    std::string name( argv[ 1 ]);
+
+    ErrorMessage *em;
+
+    if( me.find("os2err") == std::string::npos )
+        em = new LibcErrorMessage();
+    else
+        em = new Os2ErrorMessage();
 
     try
     {
-        found = print_error( std::stoi( errname ));
+        em->find( std::stoi( name ));
     }
     catch( ... )
     {
-        found = print_error( errname );
+        em->find( name );
     }
 
-    if( !found )
+    auto result = em->result();
+    delete em;
+
+    if( result.empty())
     {
-        std::cerr << "Error " << "`" << errname << "'" << " not found!!!\n";
+        std::cerr << "Error " << "`" << name << "'" << " not found!!!\n";
 
         return 1;
     }
+
+    std::for_each( result.cbegin(), result.cend(),
+                   []( const auto& item ) {
+                        std::cout << item.name << "(" << item.error << "): "
+                                  << item.message << "\n";
+                   });
 
     return 0;
 }

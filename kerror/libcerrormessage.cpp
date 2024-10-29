@@ -1,5 +1,5 @@
 /*
- * LIBC error list
+ * LibcErrorMessage
  *
  * Copyright (C) 2024 KO Myung-Hun <komh78@gmail.com>
  *
@@ -16,6 +16,10 @@
 
 #include <cerrno>
 
+#include "errormessage.h"
+#include "libcerrormessage.h"
+
+
 #ifndef EZERO
 #define EZERO   0
 #endif
@@ -30,7 +34,7 @@
 #define EBADVER 91
 #endif
 
-static std::vector< error_item > error_list = {
+static error_list libc_errors = {
     ERROR_ITEM( EZERO, "Error 0" ),
     ERROR_ITEM( EPERM, "Operation not permitted" ),
     ERROR_ITEM( ENOENT, "No such file or directory" ),
@@ -127,3 +131,8 @@ static std::vector< error_item > error_list = {
     ERROR_ITEM( ENEWVER, "mixing with a new version of a struct" ),
     ERROR_ITEM( EBADVER, "bad version number" ),
 };
+
+const error_list& LibcErrorMessage::errors() const
+{
+    return libc_errors;
+}
