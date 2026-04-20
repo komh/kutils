@@ -30,7 +30,7 @@ LD  := g++
 LDFLAGS += -Zomf
 
 ifneq ($(filter wlink WLINK,$(EMXOMFLD_TYPE)),)
-LDFLAGS += -Zlinker "DISABLE 1121"
+LDFLAGS += -Zlinker DISABLE -Zlinker 1121
 endif
 
 ifdef RELEASE
