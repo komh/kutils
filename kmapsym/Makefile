@@ -14,13 +14,13 @@
 ##### Configuration parts that you can modify
 
 # specify sub directories
-SUBDIRS := kfileclip klinecalc krn klxtools kerror kmapsym
+SUBDIRS :=
 
 # specify gcc compiler flags for all the programs
 CFLAGS := -Wall
 
 # specify g++ compiler flags for all the programs
-CXXFLAGS := -Wall
+CXXFLAGS := -Wall -std=c++17
 
 # specify linker flags such as -L option for all the programs
 LDFLAGS :=
@@ -35,8 +35,8 @@ CXXFLAGS +=
 LDFLAGS  +=
 else
 # specify flags for debug mode
-CFLAGS   +=
-CXXFLAGS +=
+CFLAGS   += -DDEBUG
+CXXFLAGS += -DDEBUG
 LDFLAGS  +=
 endif
 
@@ -76,7 +76,10 @@ NO_COMPRESS_RES :=
 #   program_DEF         for .def file
 #   program_EXTRADEPS   for extra dependencies
 
-BIN_PROGRAMS :=
+BIN_PROGRAMS := kmapsym
+
+kmapsym_SRCS := kmapsym.cpp kmapparser.cpp kibmmapparser.cpp \
+                kwatcommapparser.cpp ksymwriter.cpp
 
 # Variables for libraries
 #
@@ -121,6 +124,6 @@ BIN_PROGRAMS :=
 
 BIN_LIBRARIES :=
 
-include Makefile.common
+include ../Makefile.common
 
 # additional stuffs
