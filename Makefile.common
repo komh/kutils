@@ -16,7 +16,9 @@
 OBJ_EXT     := .o
 LIB_EXT     := .a
 OMF_LIB_EXT := .lib
+ifneq ($(OS2_SHELL),)
 EXE_EXT     := .exe
+endif
 DLL_EXT     := .dll
 
 .SUFFIXES : .def .exe .dll .a .lib .o .obj .res .c .cpp .h .rc .d $(OBJ_EXT) $(LIB_EXT) $(OMF_LIB_EXT) $(EXE_EXT) $(DLL_EXT)
@@ -26,8 +28,10 @@ CC  := gcc
 CXX := g++
 LD  := g++
 
+ifneq ($(OS2_SHELL),)
 # always build with -Zomf
 LDFLAGS += -Zomf
+endif
 
 ifneq ($(filter wlink WLINK,$(EMXOMFLD_TYPE)),)
 LDFLAGS += -Zlinker DISABLE -Zlinker 1121
@@ -36,8 +40,12 @@ endif
 ifdef RELEASE
 # remove symbols
 LDFLAGS  += -s
+ifneq ($(OS2_SHELL),)
 # pack the executable and DLLs
 LXLITE   := lxlite /B- /L- /CS
+else
+LXLITE   := echo ignore packing
+endif
 else
 # enable symbolic debugging
 CFLAGS   += -g
@@ -91,7 +99,7 @@ ifneq ($(strip $(NO_COMPRESS_RES)),)
 endif
 endif
 
-$(1) : $(1)$(EXE_EXT)
+prog$(1) : $(1)$(EXE_EXT)
 endef
 
 # template to create a static library
@@ -197,9 +205,9 @@ endef
 	$(if $(QUIET), @echo [RC] $@)
 	$(QUIET)$(RC) $(RCFLAGS) -r $< $@
 
-.PHONY : all $(BIN_PROGRAMS) $(BIN_LIBRARIES) clean $(SUBDIRS)
+.PHONY : all $(BIN_PROGRAMS) $(addprefix prog,$(BIN_LIBRARIES)) clean $(SUBDIRS)
 
-all : $(SUBDIRS) $(BIN_PROGRAMS) $(BIN_LIBRARIES)
+all : $(SUBDIRS) $(addprefix prog,$(BIN_PROGRAMS)) $(BIN_LIBRARIES)
 
 # check if both library_LIB and library_DLL is not set
 $(foreach lib,$(BIN_LIBRARIES),$(if $(strip $($(lib)_LIB)$($(lib)_DLL)),,$(error Either of $(lib)_LIB or $(lib)_DLL SHOULD be SET)))

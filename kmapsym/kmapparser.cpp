@@ -62,6 +62,11 @@ bool KMapParser::parse()
 
     while( std::getline( _ifs, line ))
     {
+#ifndef __EMX__
+        if( line.back() == '\r')
+          line.pop_back();
+#endif
+
         if( !parseLine( line ))
             return false;
     }
