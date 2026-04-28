@@ -67,8 +67,10 @@
 
 * SymbolInfo
     type addr;
-        type is uint16_t if 16-bit constant/segment(addrType == 2)
-        type is uint32_t if 32-bit constant/segment(addrType == 3)
+        type is uint16_t if all the constant values and the symbol addresses
+                            are 16-bit (addrType == 2)
+        type is uint32_t if any of the constant values and the symbol addresses
+                            is 32-bit (addrType == 3)
         addr is a value if constant
         addr is an address if segment
 
