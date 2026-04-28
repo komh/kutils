@@ -25,8 +25,6 @@
 #include <iomanip>
 #endif
 
-using AddrType = KSymWriter::AddrType;
-
 #pragma pack( push, 1 )
 
 /******************************************************************************
@@ -93,6 +91,14 @@ using AddrType = KSymWriter::AddrType;
 ******************************************************************************/
 
 /**
+ * Address type
+ */
+enum class AddrType : uint16_t {
+    Bit16 = 2,  ///< 16-bit address
+    Bit32 = 3   ///< 32-bit address
+};
+
+/**
  * Header of .SYM file
  */
 struct SymHeader
@@ -135,9 +141,20 @@ struct SegmentInfo
 
 #pragma pack( pop )
 
-KSymWriter::KSymWriter( std::string_view symFileName, AddrType addrType )
+/**
+ * Convert the length of the segment to AddrType
+ *
+ * @param[in] len   Length of the segment
+ * @return          @c AddrType::Bit32 if @p len > 0xFFFF
+ * @return          @c AddrType::Bit16 otherwise
+ */
+static inline AddrType l2a( size_t len )
+{
+    return len > 0xFFFF ? AddrType::Bit32 : AddrType::Bit16;
+}
+
+KSymWriter::KSymWriter( std::string_view symFileName )
     : _symFileName( symFileName )
-    , _addrType( addrType )
 {
 
 }
@@ -176,13 +193,13 @@ bool KSymWriter::write()
         _moduleName = std::filesystem::path( _symFileName ).stem().string();
 
     // remove segments without any symbols
-    for( auto it = _symbols.begin(); it != _symbols.end(); ++it )
+    for( auto it = _segSymsMap.begin(); it != _segSymsMap.end(); ++it )
     {
         if( it->second.empty())
-            it = _symbols.erase( it );
+            it = _segSymsMap.erase( it );
     }
 
-    if( _symbols.size() == 0 )
+    if( _segSymsMap.size() == 0 )
     {
         std::cerr << "No symbols found!!!\n";
 
@@ -193,14 +210,14 @@ bool KSymWriter::write()
     std::cout << "Module: " << _moduleName << "\n";
     std::cout << "\n";
 
-    for( const auto& syms: _symbols )
+    for( const auto& segSyms: _segSymsMap )
     {
-        std::cout << "Segment: " << _segments[ syms.first ] << "\n";
+        std::cout << "Segment: " << _segments[ segSyms.first ].name << "\n";
 
-        for( const auto& sym: syms.second )
+        for( const auto& sym: segSyms.second )
         {
             std::cout << std::setfill('0') << std::setw( 4 )
-                      << syms.first << ":"
+                      << segSyms.first << ":"
                       << std::setw( 8 ) << std::hex << sym.addr << " "
                       << sym.name << "\n";
         }
@@ -218,13 +235,14 @@ bool KSymWriter::write()
     };
 
     // calculate the size of the symbol table
-    auto calcSymSize = [ this ]( const std::vector< Symbol >& symbols )
+    auto calcSymSize = [ this ]( AddrType addrType,
+                                 const Symbols& symbols )
     {
         size_t symSize = 0;
 
         for( const auto& sym: symbols )
         {
-            symSize += ( this->_addrType == AddrType::Bit32 ?
+            symSize += ( addrType == AddrType::Bit32 ?
                          sizeof( uint32_t ) : sizeof( uint16_t )) +
                        sizeof( uint8_t ) + sym.name.size();
         }
@@ -233,7 +251,7 @@ bool KSymWriter::write()
     };
 
     // calculate the size of the symbol offset table
-    auto calcSymOfsSize = []( const std::vector< Symbol >& symbols )
+    auto calcSymOfsSize = []( const Symbols& symbols )
     {
         /* for the table sorted by addr and by name */
         return symbols.size() * sizeof( uint16_t ) * 2;
@@ -247,12 +265,12 @@ bool KSymWriter::write()
 
     SymHeader header{};
 
-    header.addrType = _addrType;
+    header.addrType = l2a( _consts.empty() ? 0 : _segments[ SEG0 ].length );
     header.entrySegNum = _entrySegNum;
     header.nConsts = _consts.size();
     header.headerSize = calcFirstSymOfs( header, _moduleName ) +
-                        calcSymSize( _consts );
-    header.nSegs = _symbols.size();
+                        calcSymSize( header.addrType, _consts );
+    header.nSegs = _segSymsMap.size();
 
     auto nextSeg = b2p( header.headerSize + calcSymOfsSize( _consts ));
     header.firstSegPara = nextSeg;
@@ -261,18 +279,20 @@ bool KSymWriter::write()
 
     std::map< int, SegmentInfo > segs;
 
-    for( const auto& syms: _symbols )
+    for( const auto& segSyms: _segSymsMap )
     {
         SegmentInfo seg{};
 
-        seg.nSyms = syms.second.size();
-        seg.segSize = calcFirstSymOfs( seg, _segments[ syms.first ]) +
-                      calcSymSize( syms.second );
-        seg.segNum = syms.first;
-        seg.addrType = _addrType;
+        auto addrType = l2a( _segments[ segSyms.first ].length );
+
+        seg.nSyms = segSyms.second.size();
+        seg.segSize = calcFirstSymOfs( seg, _segments[ segSyms.first ].name ) +
+                      calcSymSize( addrType, segSyms.second );
+        seg.segNum = segSyms.first;
+        seg.addrType = addrType;
         seg.u12 = 0xFF00;
 
-        nextSeg += b2p( seg.segSize + calcSymOfsSize( syms.second ));
+        nextSeg += b2p( seg.segSize + calcSymOfsSize( segSyms.second ));
         seg.nextSegPara = nextSeg;
 
         segs[ seg.segNum ] = seg ;
@@ -288,26 +308,27 @@ bool KSymWriter::write()
     writeStr( _moduleName );
 
     // write constants
-    writeSymbols( _consts, calcFirstSymOfs( header, _moduleName ));
+    writeSymbols( SEG0, _consts, calcFirstSymOfs( header, _moduleName ));
 
     // write padding
     writePadding( header.headerSize + calcSymOfsSize( _consts ));
 
     // write segments
-    for( const auto& syms: _symbols )
+    for( const auto& segSyms: _segSymsMap )
     {
-        auto seg = segs[ syms.first ];
-        auto segName = _segments[ syms.first ];
+        auto seg = segs[ segSyms.first ];
+        auto segName = _segments[ segSyms.first ].name;
 
         // write segment
         writeData( &seg, sizeof( seg ));
         writeStr( segName );
 
         // write symbols
-        writeSymbols( syms.second, calcFirstSymOfs( seg, segName ));
+        writeSymbols( segSyms.first, segSyms.second,
+                      calcFirstSymOfs( seg, segName ));
 
         // write padding
-        writePadding( seg.segSize + calcSymOfsSize( syms.second ));
+        writePadding( seg.segSize + calcSymOfsSize( segSyms.second ));
     }
 
     // write the mark of end
@@ -337,49 +358,44 @@ bool KSymWriter::setEntryPoint( std::string_view entryPoint )
 
 bool KSymWriter::addGroup( const KMapParser::Group& grp )
 {
-    uint32_t segNum;
-    auto res = std::from_chars( grp.addr.data(),
-                                grp.addr.data() + grp.addr.size(), segNum, 16 );
+    return addSegment({ grp.addr, grp.length, grp.name});
+}
+
+bool KSymWriter::addSegment( const KMapParser::Segment& seg  )
+{
+    uint32_t segNum, segOfs;
+
+    auto res = std::from_chars( seg.addr.data(),
+                                seg.addr.data() + seg.addr.size(), segNum, 16 );
 
     if( !( res.ec == std::errc() && *res.ptr == ':'))
         return false;
 
     // ignore 0000:xxxxxxxx
-    if( segNum == 0 )
+    if( segNum == SEG0 )
         return true;
 
-    if( _segments.find( segNum ) == _segments.end())
-    {
-        _segments[ segNum ] = grp.name;
-        _symbols[ segNum ] = {};
-    }
-
-    return true;
-}
-
-bool KSymWriter::addSegment( const KMapParser::Segment& seg  )
-{
-    uint32_t segNum, ofs;
-
-    auto res = std::from_chars( seg.addr.data(),
-                                seg.addr.data() + seg.addr.size(), segNum, 16 );
-    if( !( res.ec == std::errc() && *res.ptr == ':'))
-        return false;
-
     res = std::from_chars( res.ptr + 1, seg.addr.data() + seg.addr.size(),
-                           ofs, 16 );
+                           segOfs, 16 );
     if( !( res.ec == std::errc() && *res.ptr == '\0'))
         return false;
 
-    // ignore segments other than xxxx:00000000
-    if( ofs == !0 )
-        return true;
+    uint32_t segLen;
 
-    if( _segments.find( segNum ) == _segments.end())
+    res = std::from_chars( seg.length.data(),
+                           seg.length.data() + seg.length.size(), segLen, 16 );
+    if( !( res.ec == std::errc() && *res.ptr == '\0'))
+        return false;
+
+    auto it = _segments.find( segNum );
+
+    if( it == _segments.end())
     {
-        _segments[ segNum ] = seg.name;
-        _symbols[ segNum ] = {};
+        _segments[ segNum ] = { seg.name, segOfs + segLen };
+        _segSymsMap[ segNum ] = {};
     }
+    else if( it->second.length < segOfs + segLen )
+        it->second.length = segOfs + segLen;
 
     return true;
 }
@@ -404,41 +420,51 @@ bool KSymWriter::addSymbol( const KMapParser::Public& sym )
         _maxSymNameLen = len;
 
     // constants ?
-    if( segNum == 0 )
+    if( segNum == SEG0 )
     {
+        auto it = _segments.find( SEG0 );
+
+        if( it == _segments.end())
+            _segments[ SEG0 ] = {"CONSTANT", 0 };
+
         _consts.push_back({ ofs, sym.name });
+
+        if( _segments[ SEG0 ].length < ofs )
+            _segments[ SEG0 ].length = ofs;
 
         return true;
     }
 
     // no registered segments ?
-    if( _symbols.find( segNum ) == _symbols.end())
+    if( _segSymsMap.find( segNum ) == _segSymsMap.end())
         return false;
 
-    _symbols[ segNum ].push_back({ ofs, sym.name });
+    _segSymsMap[ segNum ].push_back({ ofs, sym.name });
 
     return true;
 }
 
-bool KSymWriter::writeSymbols( const std::vector< Symbol >& symbols,
+bool KSymWriter::writeSymbols( size_t segNum, const Symbols& symbols,
                                size_t firstSymOfs )
 {
     if( symbols.empty())
         return true;
 
-    std::vector< Symbol > syms{ symbols };
+    auto addrType = l2a( _segments[ segNum ].length );
+
+    Symbols syms{ symbols };
+
+    using SymOfsPair = std::pair< size_t, std::string >;
+    std::vector< SymOfsPair > symOfsTbl;
 
     // write symbols and build symbol offset table sorted by address
     auto symOfs = firstSymOfs;
-
-    using SymOfsPair = std::pair< decltype( symOfs ), std::string >;
-    std::vector< SymOfsPair > symOfsTbl;
 
     for( const auto& sym: syms )
     {
         symOfsTbl.push_back( std::make_pair( symOfs, sym.name ));
 
-        if( _addrType == AddrType::Bit32 )
+        if( addrType == AddrType::Bit32 )
         {
             write32( sym.addr );
             symOfs += sizeof( uint32_t );

@@ -41,11 +41,10 @@ enum class KMapParserType {
 static void showUsage()
 {
     std::cout << "\
-Usage: kmapsym map_type [-s] filename[.map]\n\
-Options: -i: IBM map file (default)\n\
-         -w: Watcom map file\n\
-         -l: 32-bit addr (default)\n\
-         -s: 16-bit addr\n\
+Usage: kmapsym map_type filename[.map]\n\
+map_type:\n\
+    -i: IBM map file (default)\n\
+    -w: Watcom map file\n\
 ";
 }
 
@@ -56,7 +55,6 @@ int main( int argc, char *argv[])
 
     KMapParserType parserType = KMapParserType::Ibm;
     std::unique_ptr< KMapParser > parser;
-    KSymWriter::AddrType addrType = KSymWriter::AddrType::Bit32;
 
     if( argc < 2 )
     {
@@ -72,10 +70,6 @@ int main( int argc, char *argv[])
             parserType = KMapParserType::Ibm;
         else if( arg.compare("-w") == 0 )
             parserType = KMapParserType::Watcom;
-        else if( arg.compare("-l") == 0 )
-            addrType = KSymWriter::AddrType::Bit32;
-        else if( arg.compare("-s") == 0 )
-            addrType = KSymWriter::AddrType::Bit16;
         else
         {
             if( !mapPath.empty())
@@ -111,7 +105,7 @@ int main( int argc, char *argv[])
         auto symPath = mapPath;
         symPath.replace_extension(".sym");
 
-        KSymWriter writer( symPath.string(), addrType );
+        KSymWriter writer( symPath.string());
 
         if( !writer.open())
             return 1;

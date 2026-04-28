@@ -34,22 +34,11 @@ class KSymWriter
 {
 public:
     /**
-     * Address type
-     */
-    enum class AddrType : uint16_t {
-        None,       ///< Unknown
-        Bit16 = 2,  ///< 16-bit address
-        Bit32 = 3   ///< 32-bit address
-    };
-
-    /**
      * Constructor
      *
      * @param[in] symFileName .SYM file name
-     * @param[in] addrType    Address type
      */
-    KSymWriter( std::string_view symFileNamee = {},
-                AddrType addrType = AddrType::Bit32 );
+    KSymWriter( std::string_view symFileNamee = {});
 
     /**
      * Destructor
@@ -121,6 +110,15 @@ public:
 
 private:
     /**
+     * Segment structure
+     */
+    struct Segment
+    {
+        std::string name;   ///< name of the segment
+        uint32_t length;    ///< length of the segment
+    };
+
+    /**
      * Symbol structure
      */
     struct Symbol
@@ -129,16 +127,21 @@ private:
         std::string name;   ///< name of the symbol
     };
 
+    static constexpr uint32_t SEG0 = 0; ///< segment number of constants
+
     std::string _symFileName;   ///< .SYM file name
-    AddrType _addrType;         ///< address type
     std::ofstream _ofs;         ///< file stream for writing
 
     std::string _moduleName;    ///< module name
     uint16_t _entrySegNum;      ///< segment number containing the entry point
 
-    std::vector< Symbol > _consts;                          ///< constant list
-    std::map< uint32_t, std::string > _segments;            ///< segment list
-    std::map< uint32_t, std::vector< Symbol >> _symbols;    ///< symbol list
+    std::map< size_t, Segment > _segments;  ///< segment list
+
+    using Symbols = std::vector< Symbol >;
+    using SegmentSymbolsMap = std::map< size_t, Symbols >;
+
+    Symbols _consts;                ///< constant list
+    SegmentSymbolsMap _segSymsMap;  ///< symbol list
 
     size_t _maxSymNameLen = 0;  ///< max length of symbol names
 
@@ -193,11 +196,12 @@ private:
     /**
      * Write a symbol list to .SYM file
      *
-     * @param[in] symbols   Symbol list to write
-     * @param[in] firstOfs  Offset to write the first symbol
-     * @return              true if succeeds, otherwise false
+     * @param[in] segNum        Segment number
+     * @param[in] symbols       Symbols to write
+     * @param[in] firstOfs      Offset to write the first symbol
+     * @return                  true if succeeds, otherwise false
      */
-    bool writeSymbols( const std::vector< Symbol >& symbols, size_t firstOfs );
+    bool writeSymbols( size_t segNum, const Symbols& symbols, size_t firstOfs );
 
     /**
      * Write paddings to .SYM file
