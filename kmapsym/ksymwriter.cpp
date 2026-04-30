@@ -360,7 +360,8 @@ bool KSymWriter::setEntryPoint( std::string_view entryPoint )
 
 bool KSymWriter::addGroup( const KMapParser::Group& grp )
 {
-    return addSegment({ grp.addr, grp.length, grp.name});
+    return addSegment({ grp.addr, grp.length.empty() ? "0" : grp.length,
+                        grp.name});
 }
 
 bool KSymWriter::addSegment( const KMapParser::Segment& seg  )
