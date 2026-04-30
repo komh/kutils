@@ -84,6 +84,14 @@ public:
     bool setEntryPoint( std::string_view entryPoint );
 
     /**
+     * Set the flag to omit alphabetical sorting of symbols
+     */
+    void setOmitAlphaSort( bool omitAlphaSort )
+    {
+        _omitAlphaSort = omitAlphaSort;
+    }
+
+    /**
      * Add group to a segment list
      *
      * @param[in] grp   Group to add
@@ -134,6 +142,8 @@ private:
 
     std::string _moduleName;    ///< module name
     uint16_t _entrySegNum;      ///< segment number containing the entry point
+
+    bool _omitAlphaSort = false;    ///< flag to omit alphabetical sorting
 
     std::map< size_t, Segment > _segments;  ///< segment list
 

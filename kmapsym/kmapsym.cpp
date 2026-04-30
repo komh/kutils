@@ -41,10 +41,12 @@ enum class KMapParserType {
 static void showUsage()
 {
     std::cout << "\
-Usage: kmapsym map_type filename[.map]\n\
+Usage: kmapsym map_type [options] filename[.map]\n\
 map_type:\n\
     -i: IBM map file (default)\n\
     -w: Watcom map file\n\
+options:\n\
+    -a: Omit alphabetical sorting of symbols\n\
 ";
 }
 
@@ -55,6 +57,8 @@ int main( int argc, char *argv[])
 
     KMapParserType parserType = KMapParserType::Ibm;
     std::unique_ptr< KMapParser > parser;
+
+    bool omitAlphaSort = false;
 
     if( argc < 2 )
     {
@@ -70,6 +74,8 @@ int main( int argc, char *argv[])
             parserType = KMapParserType::Ibm;
         else if( arg.compare("-w") == 0 )
             parserType = KMapParserType::Watcom;
+        else if( arg.compare("-a") == 0 )
+            omitAlphaSort = true;
         else
         {
             if( !mapPath.empty())
@@ -116,6 +122,8 @@ int main( int argc, char *argv[])
 
         if( !writer.open())
             return 1;
+
+        writer.setOmitAlphaSort( omitAlphaSort );
 
 #ifdef DEBUG
         std::cout << "MODULE: " << parser->moduleName() << "\n";

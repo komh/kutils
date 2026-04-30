@@ -86,6 +86,7 @@
 
     uint16_t offsetsByName[ nSyms ];
         sorted by name converted to lowercase
+        optional
 
         offset is to symbols from .SYM file header if constants
                              from segment header if segment symbols
@@ -253,10 +254,11 @@ bool KSymWriter::write()
     };
 
     // calculate the size of the symbol offset table
-    auto calcSymOfsSize = []( const Symbols& symbols )
+    auto calcSymOfsSize = [ this ]( const Symbols& symbols )
     {
         /* for the table sorted by addr and by name */
-        return symbols.size() * sizeof( uint16_t ) * 2;
+        return symbols.size() * sizeof( uint16_t ) *
+               ( this->_omitAlphaSort ? 1 : 2 );
     };
 
     // convert bytes to paragraphs
@@ -485,6 +487,9 @@ bool KSymWriter::writeSymbols( size_t segNum, const Symbols& symbols,
     // write symbol offset table sorted by value
     for( const auto& sym: symOfsTbl )
         write16( sym.first );
+
+    if( _omitAlphaSort )
+        return true;
 
     // compare strings case-insensitively by converting to lowercase
     auto nameCmp = []( const auto& a, const auto& b )
