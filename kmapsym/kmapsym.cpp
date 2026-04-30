@@ -100,6 +100,13 @@ int main( int argc, char *argv[])
     else
         parser = std::make_unique< KWatcomMapParser >( mapPath.string());
 
+    if( !parser )
+    {
+        std::cerr << "Out of memory!!!\n";
+
+        return 1;
+    }
+
     if( parser->open() && parser->parse())
     {
         auto symPath = mapPath;
