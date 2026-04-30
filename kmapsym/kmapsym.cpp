@@ -52,6 +52,7 @@ options:\n\
     -a: Omit alphabetical sorting of symbols\n\
     -l: Produce verbose listing\n\
     -ll: Produce more verbose listing\n\
+    -n: Include source code line numbers in .SYM file (ignored)\n\
 ";
 }
 
@@ -85,6 +86,8 @@ int main( int argc, char *argv[])
              verb.level( KVerbose::Level::Info );
         else if( arg.compare("-ll") == 0 )
             verb.level( KVerbose::Level::Debug );
+        else if( arg.compare("-n") == 0 )
+            /* ignore */;
         else
         {
             if( !mapPath.empty())
