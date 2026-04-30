@@ -237,7 +237,7 @@ bool KSymWriter::write()
     };
 
     // calculate the size of the symbol table
-    auto calcSymSize = [ this ]( AddrType addrType,
+    auto calcSymSize = []( AddrType addrType,
                                  const Symbols& symbols )
     {
         size_t symSize = 0;
