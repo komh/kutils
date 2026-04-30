@@ -465,15 +465,13 @@ bool KSymWriter::writeSymbols( size_t segNum, const Symbols& symbols,
 
     verb.debug() << std::setfill(' ') << "\n";
 
-    Symbols syms{ symbols };
-
     using SymOfsPair = std::pair< size_t, std::string >;
     std::vector< SymOfsPair > symOfsTbl;
 
     // write symbols and build symbol offset table sorted by address
     auto symOfs = firstSymOfs;
 
-    for( const auto& sym: syms )
+    for( const auto& sym: symbols )
     {
         symOfsTbl.push_back( std::make_pair( symOfs, sym.name ));
 
