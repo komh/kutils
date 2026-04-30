@@ -15,15 +15,13 @@
 /** @file */
 
 #include "ksymwriter.h"
+#include "kverbose.h"
 
 #include <iostream>
+#include <iomanip>
 #include <charconv>
 #include <filesystem>
 #include <algorithm>
-
-#ifdef DEBUG
-#include <iomanip>
-#endif
 
 #pragma pack( push, 1 )
 
@@ -144,6 +142,8 @@ struct SegmentInfo
 
 #pragma pack( pop )
 
+#define verb KVerbose::instance()
+
 /**
  * Convert the length of the segment to AddrType
  *
@@ -204,32 +204,16 @@ bool KSymWriter::write()
 
     if( _segSymsMap.size() == 0 )
     {
-        std::cerr << "No symbols found!!!\n";
+        verb.err() << "No symbols found!!!\n";
 
         return false;
     }
 
-#ifdef DEBUG
-    std::cout << "Module: " << _moduleName << "\n";
-    std::cout << "\n";
-
-    for( const auto& segSyms: _segSymsMap )
-    {
-        std::cout << "Segment: " << _segments[ segSyms.first ].name << "\n";
-
-        for( const auto& sym: segSyms.second )
-        {
-            std::cout << std::setfill('0') << std::setw( 4 )
-                      << segSyms.first << ":"
-                      << std::setw( 8 ) << std::hex << sym.addr << " "
-                      << sym.name << "\n";
-        }
-        std::cout << "\n";
-    }
-
-    std::cout << "Segment containing entry point: "
-              << _entrySegNum << "\n";
-#endif
+    verb.info() << _moduleName << std::setw( 21 - _moduleName.size())
+                << _segSymsMap.size() << " segment";
+    if( _segSymsMap.size() > 1 )
+        verb.info() << "s";
+    verb.info() << "\n";
 
     // calculate the offset of the first symbol
     auto calcFirstSymOfs = []( const auto& t, std::string_view name )
@@ -341,6 +325,8 @@ bool KSymWriter::write()
     // write .SYM file generator version info
     write16( 0x0501 );
 
+    verb.debug() << "Segment containing entry point: " << _entrySegNum << "\n";
+
     return true;
 }
 
@@ -360,13 +346,51 @@ bool KSymWriter::setEntryPoint( std::string_view entryPoint )
     return true;
 }
 
-bool KSymWriter::addGroup( const KMapParser::Group& grp )
+bool KSymWriter::addSymbol( const KMapParser::Public& sym )
 {
-    return addSegment({ grp.addr, grp.length.empty() ? "0" : grp.length,
-                        grp.name});
+    uint32_t segNum, ofs;
+
+    auto res = std::from_chars( sym.addr.data(),
+                                sym.addr.data() + sym.addr.size(), segNum, 16 );
+    if( !( res.ec == std::errc() && *res.ptr == ':'))
+        return false;
+
+    res = std::from_chars( res.ptr + 1, sym.addr.data() + sym.addr.size(),
+                           ofs, 16 );
+    if( !( res.ec == std::errc() && *res.ptr == '\0'))
+        return false;
+
+    // update maximum length of the symbol names
+    auto len = sym.name.size();
+    if( _maxSymNameLen < len)
+        _maxSymNameLen = len;
+
+    // constants ?
+    if( segNum == SEG0 )
+    {
+        auto it = _segments.find( SEG0 );
+
+        if( it == _segments.end())
+            _segments[ SEG0 ] = {"<Constants>", 0 };
+
+        _consts.push_back({ ofs, sym.name });
+
+        if( _segments[ SEG0 ].length < ofs )
+            _segments[ SEG0 ].length = ofs;
+
+        return true;
+    }
+
+    // no registered segments ?
+    if( _segSymsMap.find( segNum ) == _segSymsMap.end())
+        return false;
+
+    _segSymsMap[ segNum ].push_back({ ofs, sym.name });
+
+    return true;
 }
 
-bool KSymWriter::addSegment( const KMapParser::Segment& seg  )
+bool KSymWriter::addSegGrp( const KMapParser::Segment& seg, bool grp )
 {
     uint32_t segNum, segOfs;
 
@@ -399,52 +423,19 @@ bool KSymWriter::addSegment( const KMapParser::Segment& seg  )
         _segments[ segNum ] = { seg.name, segOfs + segLen };
         _segSymsMap[ segNum ] = {};
     }
-    else if( it->second.length < segOfs + segLen )
-        it->second.length = segOfs + segLen;
-
-    return true;
-}
-
-bool KSymWriter::addSymbol( const KMapParser::Public& sym )
-{
-    uint32_t segNum, ofs;
-
-    auto res = std::from_chars( sym.addr.data(),
-                                sym.addr.data() + sym.addr.size(), segNum, 16 );
-    if( !( res.ec == std::errc() && *res.ptr == ':'))
-        return false;
-
-    res = std::from_chars( res.ptr + 1, sym.addr.data() + sym.addr.size(),
-                           ofs, 16 );
-    if( !( res.ec == std::errc() && *res.ptr == '\0'))
-        return false;
-
-    // update maximum length of the symbol names
-    auto len = sym.name.size();
-    if( _maxSymNameLen < len)
-        _maxSymNameLen = len;
-
-    // constants ?
-    if( segNum == SEG0 )
+    else
     {
-        auto it = _segments.find( SEG0 );
+        if( grp && _segments[ segNum ].name.compare( seg.name ) != 0 )
+        {
+            verb.info() << seg.name << " (grp) redefines "
+                        << _segments[ segNum ].name << " (seg)\n";
 
-        if( it == _segments.end())
-            _segments[ SEG0 ] = {"CONSTANT", 0 };
+            _segments[ segNum ].name = seg.name;
+        }
 
-        _consts.push_back({ ofs, sym.name });
-
-        if( _segments[ SEG0 ].length < ofs )
-            _segments[ SEG0 ].length = ofs;
-
-        return true;
+        if( it->second.length < segOfs + segLen )
+            it->second.length = segOfs + segLen;
     }
-
-    // no registered segments ?
-    if( _segSymsMap.find( segNum ) == _segSymsMap.end())
-        return false;
-
-    _segSymsMap[ segNum ].push_back({ ofs, sym.name });
 
     return true;
 }
@@ -456,6 +447,23 @@ bool KSymWriter::writeSymbols( size_t segNum, const Symbols& symbols,
         return true;
 
     auto addrType = l2a( _segments[ segNum ].length );
+    auto segName{ _segments[ segNum ].name };
+
+    verb.info() << segName << std::setw( 21 - segName.size() )
+                << symbols.size() << " "
+                << ( addrType == AddrType::Bit32 ? 32: 16 ) << "-bit symbol";
+    if( symbols.size() > 1 )
+        verb.info() << "s";
+    verb.info() << "\n";
+
+    for( const auto& sym: symbols )
+    {
+        verb.debug() << std::setfill('0') << std::setw( 4 ) << segNum << ":"
+                     << std::setw( 8 ) << std::hex << sym.addr << std::dec << " "
+                     << sym.name << "\n";
+    }
+
+    verb.debug() << std::setfill(' ') << "\n";
 
     Symbols syms{ symbols };
 

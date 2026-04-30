@@ -97,7 +97,12 @@ public:
      * @param[in] grp   Group to add
      * @return          true if succeeds, otherwise false
      */
-    bool addGroup( const KMapParser::Group& grp );
+    bool addGroup( const KMapParser::Group& grp )
+    {
+        return addSegGrp({ grp.addr, grp.length.empty() ? "0" : grp.length,
+                           grp.name}, true );
+    }
+
 
     /**
      * Add segment to a segment list
@@ -106,7 +111,10 @@ public:
      * @return          true if succeeds, otherwise false
      * @remark          Ignores segments with non-zero offset
      */
-    bool addSegment( const KMapParser::Segment& seg );
+    bool addSegment( const KMapParser::Segment& seg )
+    {
+        return addSegGrp( seg, false );
+    }
 
     /**
      * Add group to a group list
@@ -154,6 +162,15 @@ private:
     SegmentSymbolsMap _segSymsMap;  ///< symbol list
 
     size_t _maxSymNameLen = 0;  ///< max length of symbol names
+
+    /**
+     * Add segment or group to a segment list
+     *
+     * @param[in] seg   Segment to add
+     * @param[in] grp   Group indicator. true for group, false for segment
+     * @return          true if succeeds, otherwise false
+     */
+    bool addSegGrp( const KMapParser::Segment& seg, bool grp );
 
     /**
      * Write binary data to .SYM file

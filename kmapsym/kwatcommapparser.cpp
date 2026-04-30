@@ -15,11 +15,14 @@
 /** @file */
 
 #include "kwatcommapparser.h"
+#include "kverbose.h"
 
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <filesystem>
+
+#define verb KVerbose::instance()
 
 /**
  * Check if @p sv starts with @p sub
@@ -41,7 +44,7 @@ static inline bool startsWith( std::string_view sv, std::string_view sub )
  */
 static inline bool uel( std::string_view line )
 {
-    std::cerr << "Unexpected line: [" << line << "]\n";
+    verb.err() << "Unexpected line: [" << line << "]\n";
 
     return false;
 }
