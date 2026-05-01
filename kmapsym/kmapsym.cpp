@@ -211,9 +211,21 @@ int main( int argc, char *argv[])
 
         verb.out() << "\n";
 
-        verb.out() << "Program entry point at " << parser->entryPoint() << "\n";
+        if( parser->entryPoint().empty())
+        {
+            std::string_view entryPoint("0000:0010");
 
-        writer.setEntryPoint( parser->entryPoint());
+            verb.out() << "No entry point, assume " << entryPoint << "\n";
+
+            writer.setEntryPoint( entryPoint );
+        }
+        else
+        {
+            verb.out() << "Program entry point at " << parser->entryPoint()
+                       << "\n";
+
+            writer.setEntryPoint( parser->entryPoint());
+        }
 
         writer.write();
     }
