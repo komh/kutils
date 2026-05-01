@@ -117,9 +117,9 @@ public:
     }
 
     /**
-     * Add group to a group list
+     * Add symbol to a symbol list
      *
-     * @param[in] grp   Group to add
+     * @param[in] sym   Symbol to add
      * @return          true if succeeds, otherwise false
      */
     bool addSymbol( const KMapParser::Public & sym );
