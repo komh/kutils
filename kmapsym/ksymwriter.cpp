@@ -196,10 +196,13 @@ bool KSymWriter::write()
         _moduleName = std::filesystem::path( _symFileName ).stem().string();
 
     // remove segments without any symbols
-    for( auto it = _segSymsMap.begin(); it != _segSymsMap.end(); ++it )
+    for( auto it = _segSymsMap.begin(); it != _segSymsMap.end(); )
     {
         if( it->second.empty())
             it = _segSymsMap.erase( it );
+        else
+            ++it;
+
     }
 
     if( _segSymsMap.size() == 0 )
