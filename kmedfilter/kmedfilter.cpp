@@ -24,19 +24,23 @@ int main()
 
     while( std::getline( std::cin, line ))
     {
-        auto pos = line.find_first_of(':');
+        // find an error line first
+        auto pos = line.find(": error:");
+
+        // find a warning line if not an error line
+        if( pos == std::string::npos )
+            pos = line.find(": warning:");
 
         if( pos != std::string::npos)
         {
-            // x:/path/to/file case ?
-            if( pos == 1 )
-                pos = line.find_first_of(':', pos + 1 );
-
-            if( pos != std::string::npos )
-                std::replace_if( line.begin(), line.begin() + pos,
-                                 []( char ch ) { return ch == '/'; }, '\\');
+            // MED does not recognize x:/path as a path
+            // replace '/' of a path with '\\'
+            std::replace_if( line.begin(), line.begin() + pos,
+                             []( char ch ) { return ch == '/'; }, '\\');
         }
 
+        // MED does not recognize LF as EOL
+        // use CRLF as EOL
         std::cout << line << "\n";
     }
 
