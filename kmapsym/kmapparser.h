@@ -53,6 +53,16 @@ public:
     };
 
     /**
+     * Export structure
+     */
+    struct Export
+    {
+        std::string addr;       ///< address of the export
+        std::string name;       ///< name of the export
+        std::string alias;      ///< alias of the export
+    };
+
+    /**
      * Public symbol structure
      */
     struct Public
@@ -125,6 +135,11 @@ public:
     const std::vector< Group >& groups() const { return _groups; }
 
     /**
+     * Get the export list
+     */
+    const std::vector< Export >& exports() const { return _exports; }
+
+    /**
      * Get the public symbols sorted by name
      */
     const std::vector< Public >& publicsByName() const
@@ -158,6 +173,7 @@ protected:
         None,               ///< Parsing non-state blocks
         Segments,           ///< Parsing segments block
         Groups,             ///< Parsing groups block
+        Exports,            ///< Parsing exports block
         PublicsByName,      ///< Parsing publics by name block
         PublicsByValue,     ///< Parsing publics by value block
         Imports             ///< Parsing imports block
@@ -207,6 +223,13 @@ protected:
     virtual void groupCb( const Group& group );
 
     /**
+     * Callback for export
+     *
+     * @param[in] exp       Export info
+     */
+    virtual void exportCb( const Export& exp );
+
+    /**
      * Callback for public symbol
      *
      * @param[in] pub   Public symbol info
@@ -237,6 +260,7 @@ private:
     std::string _moduleName;                ///< module name
     std::vector< Segment > _segments;       ///< segment list
     std::vector< Group > _groups;           ///< group list
+    std::vector< Export > _exports;         ///< export list
     std::vector< Public > _publicsByName;   ///< public list sorted by name
     std::vector< Public > _publicsByValue;  ///< public list sorted by address
                                             ///< or value

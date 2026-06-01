@@ -98,6 +98,8 @@ bool KIbmMapParser::parseLine( std::string_view line )
         state( State::Segments );
     else if( v.front().compare("Origin") == 0 )
         state( State::Groups );
+    else if( v.back().compare("Alias") == 0 )
+        state( State::Exports );
     else if( v.back().compare("Name") == 0 )
         state( State::PublicsByName );
     else if( v.back().compare("Value") == 0 )
@@ -143,6 +145,14 @@ bool KIbmMapParser::parseLine( std::string_view line )
                     return uel( line );
 
                 groupCb({ std::string( v[ 0 ]), {}, std::string( v[ 1 ])});
+                break;
+
+            case State::Exports:
+                if( v.size() != 3 )
+                    return uel( line );
+
+                exportCb({ std::string( v[ 0 ]), std::string( v[ 1 ]),
+                           std::string( v[ 2 ])});
                 break;
 
             case State::PublicsByName:

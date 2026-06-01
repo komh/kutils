@@ -138,9 +138,14 @@ void KMapParser::segmentCb( const Segment& segment )
     _segments.push_back( segment );
 }
 
-void KMapParser::groupCb( const Group& group)
+void KMapParser::groupCb( const Group& group )
 {
     _groups.push_back( group );
+}
+
+void KMapParser::exportCb( const Export& exp )
+{
+    _exports.push_back( exp );
 }
 
 void KMapParser::publicCb( const Public& pub, State st )
