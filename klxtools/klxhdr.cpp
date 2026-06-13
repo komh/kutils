@@ -82,6 +82,17 @@ static inline void printBool( const std::string& msg, unsigned long fl,
 }
 
 /**
+ * Print message and string value
+ *
+ * \param[in] msg Message to print
+ * \param[in] s   String to print
+ */
+static inline void printStr( const std::string& msg, const std::string& s )
+{
+    std::cout << msg << s << "\n";
+}
+
+/**
  * Dump LX header
  *
  * \param[in] filename Filename to dump
@@ -214,7 +225,13 @@ static void dump( const std::string& filename )
         printHex("Import module name table offset: ", lxHdr.impMod());
         printDec("Number of entries in the import module name table: ",
                  lxHdr.impModCount());
+        for( auto mod: lxHdr.impMods())
+            printStr("\tImported module: ", mod );
+
         printHex("Import procedure name table offset: ", lxHdr.impProc());
+        for( auto proc: lxHdr.impProcs())
+            printStr("\tImported procedure: ", proc );
+
         printHex("Per-page checksum table offset: ", lxHdr.pageSum());
         printHex("Data pages offset: ", lxHdr.dataPage());
         printDec("Number of preload pages for this module: ", lxHdr.preload());

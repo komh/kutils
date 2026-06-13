@@ -125,6 +125,9 @@ bool LxHeader::setFilename( const std::string& filename )
     // check if LX header really
     _lx = ( _lxData[ 0 ] | ( _lxData[ 1 ] << 8 )) == E32MAGIC;
 
+    readImpMods( &ifs );
+    readImpProcs( &ifs );
+
     ifs.close();
 
     // All done. Return true regardless of the result of ifs.good()
@@ -656,4 +659,85 @@ unsigned long LxHeader::heapSize() const
 unsigned long LxHeader::stackSize() const
 {
     return e32( _lxData ).e32_stacksize;
+}
+
+/**
+ * Get imported modules
+ *
+ * \return Imported modules
+ */
+const std::vector< std::string >& LxHeader::impMods() const
+{
+    return _impMods;
+}
+
+/**
+ * Get imported procedures
+ *
+ * \return Imported procedures
+ */
+const std::vector< std::string >& LxHeader::impProcs() const
+{
+    return _impProcs;
+}
+
+/**
+ * Read imported modules
+ *
+ * \param ifs File stream to read
+ * \return true on success, false on failure
+ */
+bool LxHeader::readImpMods( std::ifstream *ifs )
+{
+    ifs->seekg( _lxOffset + impMod());
+    if( !ifs->good())
+        return false;
+
+    char len;
+    std::vector< char > name;
+
+    for( auto i = impModCount(); i > 0; --i )
+    {
+        ifs->read( &len, sizeof( unsigned char ));
+        if( !ifs->good())
+            return false;
+
+        name.resize( len );
+        ifs->read( name.data(), len );
+        if( !ifs->good())
+            return false;
+
+        _impMods.push_back( std::string{ name.data(), len });
+    }
+
+    return true;
+}
+
+/**
+ * Read imported procedures
+ *
+ * \param ifs File stream to read
+ * \return true on success, false on failure
+ */
+bool LxHeader::readImpProcs( std::ifstream *ifs )
+{
+    ifs->seekg( _lxOffset + impProc());
+    if( !ifs->good())
+        return false;
+
+    auto impProcTableSize = fixupPageTable() + fixupSize() - impProc();
+    std::vector< char > impProcTable;
+
+    impProcTable.resize( impProcTableSize );
+    ifs->read( impProcTable.data(), impProcTableSize );
+
+    // first entry should be 00h
+    if( !( ifs->good() && impProcTable.data()[0] == 0 ))
+        return false;
+
+    auto tableEnd = impProcTable.data() + impProcTable.size();
+    for( const char *p = impProcTable.data() + 1; p < tableEnd; p += 1 + *p )
+        _impProcs.push_back( std::string{ p + 1, *p });
+
+    return true;
 }

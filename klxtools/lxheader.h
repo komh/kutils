@@ -108,6 +108,9 @@ public:
     unsigned long heapSize() const;
     unsigned long stackSize() const;
 
+    const std::vector< std::string >& impMods() const;
+    const std::vector< std::string >& impProcs() const;
+
 private:
     std::string _filename;          ///< Filename to read LX header
     std::vector< char > _dosData;   ///< Buffer for DOS stub header
@@ -115,6 +118,12 @@ private:
     bool _dosStub;                  ///< Indicator for DOS stub header
     bool _lx;                       ///< Indicator for LX header
     long _lxOffset;                 ///< Offset of LX header
+
+    std::vector< std::string > _impMods;    ///< Imported modules
+    std::vector< std::string > _impProcs;   ///< Imported procedures
+
+    bool readImpMods( std::ifstream* ifs );
+    bool readImpProcs( std::ifstream* ifs );
 };
 
 #endif
