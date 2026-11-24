@@ -30,8 +30,7 @@ PMApp::PMApp() : _hab( 0 ), _hmq( 0 )
     DosGetInfoBlocks( NULL, &ppib );
 
     // morph to PM
-    if( ppib->pib_ultype == 2 )
-        ppib->pib_ultype = 3;
+    ppib->pib_ultype = 3;
 
     _hab = WinInitialize( 0 );
     _hmq = WinCreateMsgQueue( _hab, 0 );
